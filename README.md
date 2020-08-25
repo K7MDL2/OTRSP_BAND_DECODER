@@ -17,6 +17,8 @@ See http://www.k1xm.org/OTRSP for protocol details.
    or use as many at 16 GPIO pins per radio for a parallel IO approach. This is useful to control a SP6T coax 
    switch for example, or select a transverter's enable line on band change.
    
+   For the Nano that I used to test on, I assigned AUX1 to digitial pins 5-8 (bits 0-3) and AUX2 to pins 9-12 (bits 0-3)
+   
    There is also code here (currently not active, needs to be adapted to Arduino) to pass on the CW keying and PTT keying,
    in this example, from the USB Serial port.  
    This is not straight forward depending on what CPU model you choose. CW and PTT are signaled by DTR and RTS
