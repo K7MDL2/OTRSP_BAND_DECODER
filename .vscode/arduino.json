@@ -1,0 +1,7 @@
+{
+    "port": "COM8",
+    "board": "arduino:avr:nano",
+    "configuration": "cpu=atmega328",
+    "programmer": "AVRISP mkII",
+    "sketch": "OTRSP_BAND_DECODER.ino"
+}
