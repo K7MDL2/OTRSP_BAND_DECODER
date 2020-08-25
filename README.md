@@ -1,4 +1,4 @@
-# OTRSP_BAND_DECODER
+# OTRSP BAND DECODER for Arduino
 Arduino Band Decoder (only) Example for OTRSP Protocol Serial Messages
    
 Sample code for decoding AUX messages from Logging programs that can use the OTRSP protocol.
