@@ -124,81 +124,92 @@ int OTRSP()
     char AuxCmd[20] = {};
     char AuxCmd0[20] = {};
     char AuxCmd1[20] = {}, AuxCmd2[20] = {};
-    char BndCmd1[BANDCMDLEN], BndCmd2[BANDCMDLEN];
+    // char BndCmd1[BANDCMDLEN], BndCmd2[BANDCMDLEN];
     
     //AuxNum1 = AuxNum2 = 0;  // Global values also used to update status on LCD
     if (Serial.available() > 0)
     {
         AuxCmd[0] = Serial.read();       // Letter A
         if (AuxCmd[0] == 'A')   // AUXxYYy\r
-        {                      
-                AuxCmd[1] = Serial.read();  // Letter U
-                AuxCmd[2] = Serial.read();  // Letter X                
-                // Looking only for 2 commands, BAND and AUX.  
-                if (strncmp(AuxCmd,"AUX", 3) == 0)   // process AUX1 where 1 is the radio number.  Each radio has a 4 bit BCD value
-                {     
-                    // get next 4 chars
-                    AuxCmd[3] = Serial.read();  // Number 1 or 2 for radio 1 or radio 2
-                    AuxCmd[4] = Serial.read();  // 1st of 2 digits for ASCII value 0-15
-                    AuxCmd[5] = Serial.read();  // 2nd of 2 digits for ACSII value 0-15.  Convert to a number later
-                    AuxCmd[6] = Serial.read();  // get the \r for validation
-                    AuxCmd[7] = '\0';           // null terminate the string
+        {       
+            // Got A, keep going               
+            AuxCmd[1] = Serial.read();  // Letter U
+            AuxCmd[2] = Serial.read();  // Letter X                
+            // Looking only for 2 commands, BAND and AUX.  
+            if (strncmp(AuxCmd,"AUX", 3) == 0)   // process AUX1 where 1 is the radio number.  Each radio has a 4 bit BCD value
+            {     
+                // get next 4 chars
+                AuxCmd[3] = Serial.read();  // Number 1 or 2 for radio 1 or radio 2
+                AuxCmd[4] = Serial.read();  // 1st of 2 digits for ASCII value 0-15
+                AuxCmd[5] = Serial.read();  // 2nd of 2 digits for ACSII value 0-15.  Convert to a number later
+                AuxCmd[6] = Serial.read();  // get the \r for validation
+                AuxCmd[7] = '\0';           // null terminate the string
 
-                    if (AuxCmd[6] == '\r') // if we find \r then we have a valid full command string
+                if (AuxCmd[6] == '\r') // if we find \r then we have a valid full command string
+                {
+                    AuxCmd[6] = '\0';  // replace the /r with NULL
+
+                    AuxNum = atoi(&AuxCmd[4]);  // Convert the ASCII BCD value to a number 0-15
+                    if (AuxNum > 15)
                     {
-                        AuxCmd[6] = '\0';  // replace the /r with NULL
-                        AuxNum = atoi(&AuxCmd[4]) & 15;  // Convert the ASCII BCD value to a number 0-15
-                        if (AuxCmd[3] == '1')  // process AUX comand for radio 1
-                        {                          
-                            AuxNum1 = AuxNum;   // Value to send to Radio 1 BCD output pins                            
-                            Serial.print("AUX1 = ");
-                            Serial.println(AuxNum1);  
+                        Serial.println("Out of Range AUX value field");
+                        return 0;  // Acceptable values are 0-15.  Do nto want to errantly change outputs on bad input.
+                    }
+                    AuxNum &= 15;   // Ensure we only act on a value range of 0-15
 
-                            //digitalWrite(Pin0, AuxNum1); // send the value out to the GPIO.  This is just a placeholder line
-                            // where we need to etiher write out BCD or parallel port bits and writ ethe appropriate code
-                            
-                            for (i=0; i < 20; i++)  // clear the buffer                             
-                              AuxCmd[i] = '\0';                                                          
-                            return 1;
-                        }                  
-                        else if (AuxCmd[3] == '2')   // process AUX comand for radio 2
-                        {                           
-                            AuxNum2 = AuxNum;  // Value to send to Radio 2 BCD output pins
-                            Serial.print("AUX2 = ");
-                            Serial.println(AuxNum2);  // write teh value for debug/info on the serial port
-                            
-                            //digitalWrite(Pin0, AuxNum1); // send the value out to the GPIO.  This is just a placeholder line
-                            // where we need to etiher write out BCD or parallel port bits and writ ethe appropriate code
-                            
-                            for (i=0; i< 20; i++)
-                                AuxCmd[i] = '\0' ;
-                            return 1; 
-                        }
+                    if (AuxCmd[3] == '1')  // process AUX comand for radio 1
+                    {                          
+                        AuxNum1 = AuxNum;   // Value to send to Radio 1 BCD output pins                            
+                        Serial.print("AUX1 = ");
+                        Serial.println(AuxNum1);  
+
+                        // ToDo:
+                        //digitalWrite(Pin0, AuxNum1); // send the value out to the GPIO.  This is just a placeholder line
+                        // where we need to etiher write out BCD or parallel port bits and writ ethe appropriate code
+                        
+                        for (i=0; i < 20; i++)  // clear the buffer                             
+                            AuxCmd[i] = '\0';                                                          
+                        return 1;
+                    }                  
+                    else if (AuxCmd[3] == '2')   // process AUX comand for radio 2
+                    {                           
+                        AuxNum2 = AuxNum;  // Value to send to Radio 2 BCD output pins
+                        Serial.print("AUX2 = ");
+                        Serial.println(AuxNum2);  // write teh value for debug/info on the serial port
+                        
+                        // ToDo:
+                        //digitalWrite(Pin0, AuxNum1); // send the value out to the GPIO.  This is just a placeholder line
+                        // where we need to etiher write out BCD or parallel port bits and writ ethe appropriate code
+                        
+                        for (i=0; i< 20; i++)
+                            AuxCmd[i] = '\0' ;
+                        return 1; 
                     }
                 }
+            }
 /*                
-                // Code from the PSoC5 code - plan to delete this section if it is proven it is not useful.  
-                // It could be useful as a band change message that follows the radio exactly.
+            // Code from the PSoC5 code - plan to delete this section if it is proven it is not useful or BAND is never used.  
+            // It could be useful as a band change message that follows the radio exactly.
 
-                // Look for BAND commands from N1MM - so far have not seen any - these are just for catching them, they cause no changes
-                if (strncmp(AuxCmd,"BAND1",5) == 0)   // process AUX1 where 1 is the radio number.  Each radio has a 4 bit BCD value
-                {
-                    // This will be the bottom frequency (in MHz) of the current radio band.  ie 3.5MHz for 3875KHz
-                    sprintf(BndCmd1,"%s", &AuxCmd[5]);
-                    AuxCmd[0] = '\0';
-                    return(0);  // TODO = assing band MHZ to a CouplerNUM  Search Band values
-                }
-                else if (strncmp(AuxCmd0,"BAND2",5) == 0)   // process AUX comand for radio 2.
-                {
-                    sprintf(BndCmd2,"%s", &AuxCmd[5]);
-                    AuxCmd[0] = '\0';
-                    return(0); 
-                }
+            // Look for BAND commands from N1MM - so far have not seen any - these are just for catching them, they cause no changes
+            if (strncmp(AuxCmd,"BAND1",5) == 0)   // process BAND1 where 1 is the radio number.  Each radio has a 4 bit BCD value
+            {
+                // This will be the bottom frequency (in MHz) of the current radio band.  ie 3.5MHz for 3875KHz
+                sprintf(BndCmd1,"%s", &AuxCmd[5]);
+                AuxCmd[0] = '\0';
+                return(0);  // TODO = passing band MHZ to a CouplerNUM  Search Band values
+            }
+            else if (strncmp(AuxCmd0,"BAND2",5) == 0)   // process AUX comand for radio 2.
+            {
+                sprintf(BndCmd2,"%s", &AuxCmd[5]);
+                AuxCmd[0] = '\0';
+                return(0); 
+            }
 */                   
-              Serial.println("Invalid Message Decode");
+            Serial.println("Invalid Message Decode");
         }
     }
-    return 0;   // nothing processed 0 is a valid band number so using 255.
+    return 0;   // nothing processed
 }
 
 /* [] END OF FILE */
