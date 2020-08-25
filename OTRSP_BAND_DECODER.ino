@@ -17,7 +17,7 @@
  *   or use as many at 16 GPIO pins per radio for a parallel IO approach. This is useful to control a SP6T coax 
  *   switch for example, or select a transverter's enable line on band change.
  *   
- *   There is also code here to pass on the CW keying and PTT keying, in this example, from a USB line.  
+ *   There is also code here (currently not active, needs to be adapted to Arduino) to pass on the CW keying and PTT keying, in this example, from a USB line.  
  *   This is not straight forward depending on what CPU model you choose. CW and PTT are signaled by DTR and RTS
  *   and on CPUs like the Nano, DTR is used to reset the CPU to bootload software updates from the PC.
  *   On something like a Nano you can remove the cap on the reset line (requiring a manual reset to upload software)
@@ -118,24 +118,22 @@ void loop() {
  *  OTRSP parsing
  *  Parses serial port commands from N1MM Logging program to control antennas and transverter
  *  via BCD or parallel GPIO port pins.
- *  Uses UART2 which shares the USB UART with the Nextion display if there is one. Desktop app
- *  config page switches between USB com port between the display and UART2 (for N1MM commands)
- *  Only using the Aux commands not the whole SO2R list of commands so not using the whole SO2R
+ *  Only using the AUX commands not the whole SO2R list of commands so not using the whole SO2R
  *  list of possible commands and queries
  *  Created by K7MDL July 27, 2020 for RF Wattmeter to enable antenna switching , transverter
- *  selection, PTT, CW, and band labeling on the LCD, especially for radios with native transverter support. 
+ *  selection, PTT, CW, and band labeling on the LCD, especially for radios without native transverter support. 
  * ========================================
 */
 
 /*
 Convert AUX command from N1MM to 4 bit BCD
-Command format is AUXxnn fixed width. x is the radio number, usually 1.   Example is AUX103 for command 03 for BCD output of 0x03.
+Command format is AUXxnn fixed width. x is the radio number, usually 1.   Example is AUX103 for radio #1 with BCD output of 0x03.
 */
 int OTRSP()
 {     
     char c;
     int i;
-    byte AuxNum;
+    static byte AuxNum;
     char AuxCmd[20] = {};
     char AuxCmd0[20] = {};
     char AuxCmd1[20] = {}, AuxCmd2[20] = {};
@@ -153,21 +151,22 @@ int OTRSP()
             // Looking only for 2 commands, BAND and AUX.  
             if (strncmp(AuxCmd,"AUX", 3) == 0)   // process AUX1 where 1 is the radio number.  Each radio has a 4 bit BCD value
             {     
-                // get next 4 chars
+                // Got an AUX commands, store rest of fixed length message
                 AuxCmd[3] = Serial.read();  // Number 1 or 2 for radio 1 or radio 2
                 AuxCmd[4] = Serial.read();  // 1st of 2 digits for ASCII value 0-15
                 AuxCmd[5] = Serial.read();  // 2nd of 2 digits for ACSII value 0-15.  Convert to a number later
                 AuxCmd[6] = Serial.read();  // get the \r for validation
                 AuxCmd[7] = '\0';           // null terminate the string
 
-                if (AuxCmd[6] == '\r') // if we find \r then we have a valid full command string
+                if (AuxCmd[6] == '\r') // if we find \r then we have a valid full command string, else bail
                 {
+                    // Got a valid formatted AUX message, no process it
                     AuxCmd[6] = '\0';  // replace the /r with NULL
 
                     AuxNum = atoi(&AuxCmd[4]);  // Convert the ASCII BCD value to a number 0-15
                     if (AuxNum > 15)
                     {
-                        Serial.println("Out of Range AUX value field");
+                        Serial.println("Out of Range AUX field value");
                         return 0;  // Acceptable values are 0-15.  Do not want to errantly change outputs on bad input.
                     }
                     AuxNum &= 15;   // Ensure we only act on a value range of 0-15
