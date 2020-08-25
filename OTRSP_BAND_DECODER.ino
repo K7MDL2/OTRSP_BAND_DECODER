@@ -45,6 +45,10 @@ int OTRSP(void);
 
 // Vars
 static byte AuxNum1, AuxNum2;
+
+// Uncomment next line to see Serial Monitor debug statements
+#define DEBUG
+
 #define FALSE 0
 #define TRUE 1
 #define AUXCMDLEN 4
@@ -106,10 +110,12 @@ void loop() {
   ret1 = OTRSP();   // set Aux output pins and change bands to match
   if (ret1)
   {
+      #ifdef DEBUG
       Serial.print("Band Decode Output Values: Radio 1 = ");
       Serial.print(AuxNum1);
       Serial.print("  Radio 2 = "); 
       Serial.println(AuxNum2);
+      #endif
   }  
   delay(500);
 }
@@ -166,30 +172,42 @@ int OTRSP()
                     AuxNum = atoi(&AuxCmd[4]);  // Convert the ASCII BCD value to a number 0-15
                     if (AuxNum > 15)
                     {
+                        #ifdef DEBUG
                         Serial.println("Out of Range AUX field value");
+                        #endif
                         return 0;  // Acceptable values are 0-15.  Do not want to errantly change outputs on bad input.
                     }
                     AuxNum &= 15;   // Ensure we only act on a value range of 0-15
 
                     if (AuxCmd[3] == '1')  // process AUX comand for radio 1
                     {                          
-                        AuxNum1 = AuxNum;   // Value to send to Radio 1 BCD output pins                            
+                        AuxNum1 = AuxNum;   // Value to send to Radio 1 BCD output pins
+                        #ifdef DEBUG                       
                         Serial.print("AUX1 = ");
                         Serial.println(AuxNum1);  
+                        #endif
 
                         // ToDo: 
                         // This sample writes out the BCD value to 4 pins assigned to AUX1
                         // we need to either write out BCD as done here or convert to a parallel port format if desired with more GPIO pins
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX1_0, AuxNum & 1);
                         AuxNum = AuxNum >> 1;
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX1_1, AuxNum & 1);
                         AuxNum = AuxNum >> 1;
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX1_2, AuxNum & 1);
                         AuxNum = AuxNum >> 1;
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX1_3, AuxNum & 1);                       
                         
                         for (i=0; i < 20; i++)  // clear the buffer                             
@@ -199,22 +217,31 @@ int OTRSP()
                     else if (AuxCmd[3] == '2')   // process AUX comand for radio 2
                     {                           
                         AuxNum2 = AuxNum;  // Value to send to Radio 2 BCD output pins
+                        #ifdef DEBUG
                         Serial.print("AUX2 = ");
                         Serial.println(AuxNum2);  // write the value for debug/info on the serial port
-                        
+                        #endif
                         // ToDo: 
                         // This sample writes out the BCD value to 4 pins assigned to AUX2
                         // we need to either write out BCD as done here or convert to a parallel port format if desired with more GPIO pins
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX2_0, AuxNum & 1);
                         AuxNum = AuxNum >> 1;
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX2_1, AuxNum & 1);
                         AuxNum = AuxNum >> 1;
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX2_2, AuxNum & 1);
                         AuxNum = AuxNum >> 1;
+                        #ifdef DEBUG
                         Serial.println(AuxNum & 1);
+                        #endif
                         digitalWrite(AUX2_3, AuxNum & 1);   
                         for (i=0; i< 20; i++)
                             AuxCmd[i] = '\0' ;
@@ -240,8 +267,10 @@ int OTRSP()
                 AuxCmd[0] = '\0';
                 return(0); 
             }
-*/                   
+*/          
+            #ifdef DEBUG
             Serial.println("Invalid Message Decode");
+            #endif
         }
     }
     return 0;   // nothing processed
