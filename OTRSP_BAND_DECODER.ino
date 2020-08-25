@@ -49,17 +49,34 @@ static byte AuxNum1, AuxNum2;
 #define TRUE 1
 #define AUXCMDLEN 4
 #define BANDCMDLEN 12
-const int Pin0 = 9;
-const int Pin1 = 10;
-const int Pin2 = 11;
-const int Pin3 = 12;
+// define Aux Port pins - 4 for BCD.  Change if using more than 4 parallel IO.
+// AUX1 output pins on Nano
+#define AUX1_0  5       
+#define AUX1_1  6
+#define AUX1_2  7
+#define AUX1_3  8
+// AUX2 output pins on Nano
+#define AUX2_0  9
+#define AUX2_1  10
+#define AUX2_2  11
+#define AUX2_3  12
 
 void setup() {
-  // initialize serial:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+    pinMode(AUX1_0, OUTPUT);
+    pinMode(AUX1_1, OUTPUT);
+    pinMode(AUX1_2, OUTPUT);
+    pinMode(AUX1_3, OUTPUT);
+
+    pinMode(AUX2_0, OUTPUT);
+    pinMode(AUX2_1, OUTPUT);
+    pinMode(AUX2_2, OUTPUT);
+    pinMode(AUX2_3, OUTPUT);
+
+    // initialize serial:
+    Serial.begin(9600);
+    while (!Serial) {
+        ; // wait for serial port to connect. Needed for native USB port only
+    }
 }
 
 void loop() {
@@ -110,8 +127,6 @@ void loop() {
  * ========================================
 */
 
-
-
 /*
 Convert AUX command from N1MM to 4 bit BCD
 Command format is AUXxnn fixed width. x is the radio number, usually 1.   Example is AUX103 for command 03 for BCD output of 0x03.
@@ -153,7 +168,7 @@ int OTRSP()
                     if (AuxNum > 15)
                     {
                         Serial.println("Out of Range AUX value field");
-                        return 0;  // Acceptable values are 0-15.  Do nto want to errantly change outputs on bad input.
+                        return 0;  // Acceptable values are 0-15.  Do not want to errantly change outputs on bad input.
                     }
                     AuxNum &= 15;   // Ensure we only act on a value range of 0-15
 
@@ -163,9 +178,20 @@ int OTRSP()
                         Serial.print("AUX1 = ");
                         Serial.println(AuxNum1);  
 
-                        // ToDo:
-                        //digitalWrite(Pin0, AuxNum1); // send the value out to the GPIO.  This is just a placeholder line
-                        // where we need to etiher write out BCD or parallel port bits and writ ethe appropriate code
+                        // ToDo: 
+                        // This sample writes out the BCD value to 4 pins assigned to AUX1
+                        // we need to either write out BCD as done here or convert to a parallel port format if desired with more GPIO pins
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX1_0, AuxNum & 1);
+                        AuxNum = AuxNum >> 1;
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX1_1, AuxNum & 1);
+                        AuxNum = AuxNum >> 1;
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX1_2, AuxNum & 1);
+                        AuxNum = AuxNum >> 1;
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX1_3, AuxNum & 1);                       
                         
                         for (i=0; i < 20; i++)  // clear the buffer                             
                             AuxCmd[i] = '\0';                                                          
@@ -175,12 +201,22 @@ int OTRSP()
                     {                           
                         AuxNum2 = AuxNum;  // Value to send to Radio 2 BCD output pins
                         Serial.print("AUX2 = ");
-                        Serial.println(AuxNum2);  // write teh value for debug/info on the serial port
+                        Serial.println(AuxNum2);  // write the value for debug/info on the serial port
                         
-                        // ToDo:
-                        //digitalWrite(Pin0, AuxNum1); // send the value out to the GPIO.  This is just a placeholder line
-                        // where we need to etiher write out BCD or parallel port bits and writ ethe appropriate code
-                        
+                        // ToDo: 
+                        // This sample writes out the BCD value to 4 pins assigned to AUX2
+                        // we need to either write out BCD as done here or convert to a parallel port format if desired with more GPIO pins
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX2_0, AuxNum & 1);
+                        AuxNum = AuxNum >> 1;
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX2_1, AuxNum & 1);
+                        AuxNum = AuxNum >> 1;
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX2_2, AuxNum & 1);
+                        AuxNum = AuxNum >> 1;
+                        Serial.println(AuxNum & 1);
+                        digitalWrite(AUX2_3, AuxNum & 1);   
                         for (i=0; i< 20; i++)
                             AuxCmd[i] = '\0' ;
                         return 1; 
