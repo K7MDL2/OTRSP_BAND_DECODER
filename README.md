@@ -31,4 +31,4 @@ See http://www.k1xm.org/OTRSP for protocol details.
    or amplifier. This can be enhanced further to be sequenced.
  
    It is also possible for the PC program to do a query where we are supposed to return the status. 
-   We are not handing any queries yet, so far it does not seem to matter if they go unanswered.
+   We are not handling any queries yet, so far it does not seem to matter if they go unanswered.
